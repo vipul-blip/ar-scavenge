@@ -101,8 +101,8 @@
              <a-image src="#piece3-img" rotation="-90 0 0" position="0 0.1 0"></a-image>
         </a-marker>
         
-        <!-- UPDATED MARKER 4: This now points to your confirmed working GitHub file -->
-        <a-marker type="pattern" url="https://raw.githubusercontent.com/vipul-blip/ar-scavenge/main/wheel-2.patt" id="marker-4">
+        <!-- UPDATED MARKER 4: Added explicit properties to improve detection -->
+        <a-marker preset="custom" type="pattern" url="https://raw.githubusercontent.com/vipul-blip/ar-scavenge/main/wheel-2.patt" id="marker-4" emitevents="true">
             <a-image src="#piece4-img" rotation="-90 0 0" position="0 0.1 0"></a-image>
         </a-marker>
 
@@ -214,6 +214,7 @@
 
             // --- AR LOGIC ---
             function handleMarkerFound(markerId, pieceIndex) {
+                console.log(`Marker found! ID: marker-${markerId}, Piece Index: ${pieceIndex}`); // Debug message
                 if (!state.collectedPieces[pieceIndex]) {
                     state.collectedPieces[pieceIndex] = true;
                     saveState();
@@ -283,4 +284,5 @@
     </script>
 </body>
 </html>
+
 
