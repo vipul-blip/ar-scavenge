@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Captain Ganga-Beard's AR Hunt</title>
+
+    <!-- Third-party libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <!-- Reverted to the AR.js version from your working ar-0 file -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom Styles */
+        body {
+            font-family: 'Pirata One', cursive;
+            background-color: #f3e9d2;
+            background-image: url('https://www.transparenttextures.com/patterns/crissxcross.png');
+            color: #4a2c2a;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        /* Hide the default A-Frame loading screen */
+        .a-loader-title {
+            display: none !important;
+        }
+
+        /* Custom animation for the final reveal */
+        @keyframes fadeInZoom {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .final-reveal-animation {
+            animation: fadeInZoom 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+    </style>
+</head>
+<body class="m-0 p-0">
+    <!-- Test Mode Controls -->
+    <div id="test-mode-container" class="fixed top-4 left-4 z-50 pointer-events-auto">
+        <button id="toggle-test-mode" class="bg-red-800 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-lg">Test</button>
+        <div id="test-controls" class="hidden absolute top-0 left-16 bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-xl w-48 space-y-2">
+            <h3 class="text-center font-bold text-lg">Test Controls</h3>
+            <button onclick="testCollectPiece(0)" class="w-full bg-gray-700 text-white p-2 rounded hover:bg-gray-900 transition-colors">Collect Piece 1</button>
+            <button onclick="testCollectPiece(1)" class="w-full bg-gray-700 text-white p-2 rounded hover:bg-gray-900 transition-colors">Collect Piece 2</button>
+            <button onclick="testCollectPiece(2)" class="w-full bg-gray-700 text-white p-2 rounded hover:bg-gray-900 transition-colors">Collect Piece 3</button>
+            <button onclick="testCollectPiece(3)" class="w-full bg-gray-700 text-white p-2 rounded hover:bg-gray-900 transition-colors">Collect Piece 4</button>
+            <button onclick="testCollectPiece(4)" class="w-full bg-gray-700 text-white p-2 rounded hover:bg-gray-900 transition-colors">Collect Piece 5</button>
+            <button onclick="testCollectPiece(5)" class="w-full bg-gray-700 text-white p-2 rounded hover:bg-gray-900 transition-colors">Collect Piece 6</button>
+            <hr class="my-2 border-gray-500">
+            <button onclick="testFinalMarker()" class="w-full bg-yellow-600 text-white p-2 rounded hover:bg-yellow-700 transition-colors">Test Final Marker</button>
+            <button onclick="resetState()" class="w-full bg-red-600 text-white p-2 rounded hover:bg-red-700 transition-colors mt-2">Reset Hunt</button>
+        </div>
+    </div>
+
+    <!-- AR Scene: This takes up the full screen behind the UI -->
+    <!-- The `embedded` property is crucial for overlaying HTML UI -->
+    <a-scene
+        id="ar-scene"
+        vr-mode-ui="enabled: false;"
+        arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true;"
+        embedded
+    >
+        <!-- Assets: Preload images for the medallion pieces -->
+        <a-assets>
+            <!-- You should replace these placeholders with your actual images of the medallion pieces -->
+            <img id="piece1-img" src="https://placehold.co/400x400/FFBF00/000000?text=Compass+Ring">
+            <img id="piece2-img" src="https://placehold.co/400x400/0000FF/FFFFFF?text=Serpent's+Eye">
+            <img id="piece3-img" src="https://placehold.co/400x400/228B22/FFFFFF?text=Trident+Tail">
+            <img id="piece4-img" src="https://placehold.co/400x400/DAA520/000000?text=Fanged+Jaw">
+            <img id="piece5-img" src="https://placehold.co/400x400/8B4513/FFFFFF?text=Scaled+Body">
+            <img id="piece6-img" src="https://placehold.co/400x400/C0C0C0/000000?text=Himalayan+Crown">
+        </a-assets>
+
+        <!-- Marker 1: Hiro (for testing, or use as a location) -->
+        <a-marker preset="hiro" id="marker-1">
+            <a-image src="#piece1-img" rotation="-90 0 0" position="0 0.1 0"></a-image>
+        </a-marker>
+
+        <!-- Marker 2: Kanji (for testing, or use as a location) -->
+        <a-marker preset="kanji" id="marker-2">
+            <a-image src="#piece2-img" rotation="-90 0 0" position="0 0.1 0"></a-image>
+        </a-marker>
+        
+        <!-- Custom Markers (You need to generate these .patt files) -->
+        <a-marker type="pattern" url="https://raw.githack.com/AR-js-org/AR.js/master/data/data/patt.a" id="marker-3">
+             <a-image src="#piece3-img" rotation="-90 0 0" position="0 0.1 0"></a-image>
+        </a-marker>
+        
+        <!-- UPDATED MARKER 4: This now points to your confirmed working GitHub file -->
+        <a-marker type="pattern" url="https://raw.githubusercontent.com/vipul-blip/ar-scavenge/main/wheel-2.patt" id="marker-4">
+            <a-image src="#piece4-img" rotation="-90 0 0" position="0 0.1 0"></a-image>
+        </a-marker>
+
+        <a-marker type="pattern" url="https://raw.githack.com/AR-js-org/AR.js/master/data/data/patt.c" id="marker-5">
+            <a-image src="#piece5-img" rotation="-90 0 0" position="0 0.1 0"></a-image>
+        </a-marker>
+        <a-marker type="pattern" url="https://raw.githack.com/AR-js-org/AR.js/master/data/data/patt.f" id="marker-6">
+            <a-image src="#piece6-img" rotation="-90 0 0" position="0 0.1 0"></a-image>
+        </a-marker>
+        
+        <!-- Final Marker -->
+        <a-marker type="barcode" value="6" id="final-marker"></a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <!-- UI Overlay -->
+    <div id="ui-overlay" class="absolute inset-0 p-4 sm:p-6 lg:p-8 flex flex-col justify-between pointer-events-none">
+        <!-- Top Section: Title and Medallion Holder -->
+        <div class="w-full">
+            <h1 class="text-4xl sm:text-5xl text-center text-shadow-lg">The Medallion of Ganga-Beard</h1>
+            <div class="mt-4 bg-[#c7b392] bg-opacity-70 backdrop-blur-sm p-3 rounded-xl shadow-lg max-w-lg mx-auto pointer-events-auto">
+                <h2 class="text-2xl text-center">Collected Fragments</h2>
+                <div id="medallion-pieces" class="grid grid-cols-3 gap-3 mt-2">
+                    <!-- JavaScript will populate these -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Section: Messages and Instructions -->
+        <div class="w-full flex flex-col items-center">
+            <div id="message-box" class="text-3xl text-center bg-red-800 text-white p-4 rounded-lg shadow-xl transition-all duration-500 transform scale-0 -translate-y-10">
+                Message Here
+            </div>
+             <p class="text-center text-xl sm:text-2xl mt-4 bg-black bg-opacity-50 text-white p-2 rounded">Point yer spyglass at the pirate markers!</p>
+        </div>
+    </div>
+    
+    <!-- Final Reveal Modal -->
+    <div id="final-reveal-modal" class="hidden absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4">
+         <div class="bg-cover bg-center rounded-xl shadow-2xl text-center p-8 max-w-xl w-full final-reveal-animation" style="background-image: url('https://www.transparenttextures.com/patterns/crissxcross.png'); background-color: #f3e9d2;">
+             <h2 class="text-5xl sm:text-6xl text-[#4a2c2a]">The Medallion is Complete!</h2>
+             <img id="complete-medallion-img" src="https://placehold.co/500x500/FFD700/4a2c2a?text=ASSEMBLED+MEDALLION" alt="Complete Medallion" class="mx-auto my-6 rounded-full border-8 border-[#4a2c2a]">
+             <p class="text-3xl sm:text-4xl text-[#4a2c2a]">The secret code to unlock the chest is:</p>
+             <p id="secret-code" class="text-6xl sm-text-7xl font-bold text-red-800 my-4">GANGA</p>
+             <button onclick="location.reload()" class="mt-4 px-8 py-3 bg-red-800 text-white text-2xl rounded-lg shadow-lg hover:bg-red-900 transition-colors pointer-events-auto">Start Anew</button>
+         </div>
+    </div>
+
+    <script>
+        // Make functions globally accessible for the test buttons
+        let testCollectPiece, testFinalMarker, resetState;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const NUM_PIECES = 6;
+            const state = {
+                collectedPieces: new Array(NUM_PIECES).fill(false),
+            };
+
+            const ui = {
+                medallionContainer: document.getElementById('medallion-pieces'),
+                messageBox: document.getElementById('message-box'),
+                finalRevealModal: document.getElementById('final-reveal-modal'),
+            };
+
+            // --- LOCAL STORAGE FUNCTIONS ---
+            function saveState() {
+                localStorage.setItem('pirateHuntState', JSON.stringify(state.collectedPieces));
+            }
+
+            function loadState() {
+                const savedState = localStorage.getItem('pirateHuntState');
+                if (savedState) {
+                    state.collectedPieces = JSON.parse(savedState);
+                }
+            }
+
+            // --- UI FUNCTIONS ---
+            function renderMedallionPieces() {
+                ui.medallionContainer.innerHTML = '';
+                for (let i = 0; i < NUM_PIECES; i++) {
+                    const pieceEl = document.createElement('div');
+                    pieceEl.className = 'aspect-square rounded-full flex items-center justify-center transition-all duration-500';
+                    if (state.collectedPieces[i]) {
+                        pieceEl.classList.add('bg-yellow-500');
+                        pieceEl.innerHTML = `<img src="https://placehold.co/100x100/FFBF00/000000?text=Piece+${i+1}" class="w-full h-full object-cover rounded-full" alt="Piece ${i+1}">`;
+                    } else {
+                        pieceEl.classList.add('bg-black', 'bg-opacity-20');
+                        pieceEl.innerHTML = `<span class="text-4xl text-white opacity-50">?</span>`;
+                    }
+                    ui.medallionContainer.appendChild(pieceEl);
+                }
+            }
+            
+            function showMessage(text, duration = 3000) {
+                ui.messageBox.textContent = text;
+                ui.messageBox.classList.remove('scale-0', '-translate-y-10');
+                ui.messageBox.classList.add('scale-100', 'translate-y-0');
+
+                setTimeout(() => {
+                    ui.messageBox.classList.remove('scale-100', 'translate-y-0');
+                    ui.messageBox.classList.add('scale-0', '-translate-y-10');
+                }, duration);
+            }
+
+            function triggerFinalReveal() {
+                ui.finalRevealModal.classList.remove('hidden');
+            }
+
+            // --- AR LOGIC ---
+            function handleMarkerFound(markerId, pieceIndex) {
+                if (!state.collectedPieces[pieceIndex]) {
+                    state.collectedPieces[pieceIndex] = true;
+                    saveState();
+                    renderMedallionPieces();
+                    showMessage(`Fragment ${pieceIndex + 1} Found!`);
+                }
+            }
+            
+            function handleFinalMarker() {
+                 const allCollected = state.collectedPieces.every(p => p === true);
+                 if(allCollected) {
+                     triggerFinalReveal();
+                 } else {
+                     const remaining = state.collectedPieces.filter(p => !p).length;
+                     showMessage(`Ye still need to find ${remaining} fragments!`);
+                 }
+            }
+            
+            // --- TEST MODE FUNCTIONS ---
+            testCollectPiece = (pieceIndex) => {
+                handleMarkerFound(pieceIndex + 1, pieceIndex);
+            };
+            
+            testFinalMarker = () => {
+                handleFinalMarker();
+            };
+            
+            resetState = () => {
+                localStorage.removeItem('pirateHuntState');
+                location.reload();
+            };
+
+            // --- INITIALIZATION ---
+            function initialize() {
+                loadState();
+                renderMedallionPieces();
+
+                // Set up event listeners for all markers
+                for (let i = 1; i <= NUM_PIECES; i++) {
+                    const marker = document.querySelector(`#marker-${i}`);
+                    if(marker) { // Check if marker exists before adding listener
+                        marker.addEventListener('markerFound', () => handleMarkerFound(i, i - 1));
+                    }
+                }
+                
+                // Event listener for the final marker
+                const finalMarker = document.querySelector('#final-marker');
+                if(finalMarker) {
+                    finalMarker.addEventListener('markerFound', handleFinalMarker);
+                }
+
+                // Test Mode UI Logic
+                const toggleButton = document.getElementById('toggle-test-mode');
+                const testControls = document.getElementById('test-controls');
+                toggleButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    testControls.classList.toggle('hidden');
+                });
+                // Hide controls if clicking elsewhere
+                document.body.addEventListener('click', () => {
+                    testControls.classList.add('hidden');
+                });
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>
+
