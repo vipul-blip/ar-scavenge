@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Captain Ganga-Beard's AR Hunt</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom Styles */
+        body {
+            font-family: 'Pirata One', cursive;
+            background-color: #f3e9d2;
+            background-image: url('https://www.transparenttextures.com/patterns/crissxcross.png');
+            color: #4a2c2a;
+            overflow: hidden; /* Prevent scrolling */
+        }
+        .a-loader-title { display: none !important; }
+        @keyframes fadeInZoom {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .final-reveal-animation {
+            animation: fadeInZoom 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+    </style>
+</head>
+<body class="m-0 p-0">
+    <div class="fixed top-4 left-4 z-50 pointer-events-auto">
+        <button onclick="testFinalMarker()" class="bg-red-800 text-white px-4 py-2 rounded-lg shadow-lg text-lg">Assemble Medallion</button>
+    </div>
+
+    <a-scene
+        id="ar-scene"
+        vr-mode-ui="enabled: false;"
+        arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true;"
+        embedded
+    >
+        <a-assets>
+            <img id="piece1-img" src="https://www.teamactivators.com/wp-content/uploads/2025/09/spear-1.png">
+            <img id="piece2-img" src="https://www.teamactivators.com/wp-content/uploads/2025/09/tail.png">
+            <img id="piece3-img" src="https://www.teamactivators.com/wp-content/uploads/2025/09/serpent-eye.png">
+            <img id="piece4-img" src="https://www.teamactivators.com/wp-content/uploads/2025/09/outer-compass-1.png">
+            <img id="piece5-img" src="https://www.teamactivators.com/wp-content/uploads/2025/09/hills.png">
+            <img id="piece6-img" src="https://www.teamactivators.com/wp-content/uploads/2025/09/fang.png">
+        </a-assets>
+
+        <a-marker preset="kanji" id="marker-1"><a-image src="#piece1-img" rotation="-90 0 0" position="0 0.1 0"></a-image></a-marker>
+        <a-marker type="pattern" url="https://raw.githubusercontent.com/vipul-blip/ar-scavenge/0690a862e83b80edc2471f23f429e0c4317bd4a5/jolly-roger.patt" id="marker-2"><a-image src="#piece2-img" rotation="-90 0 0" position="0 0.1 0"></a-image></a-marker>
+        <a-marker type="pattern" url="https://raw.githack.com/stemkoski/AR.js-examples/master/data/alpha.patt" id="marker-3"><a-image src="#piece3-img" rotation="-90 0 0" position="0 0.1 0"></a-image></a-marker>
+        <a-marker type="pattern" url="https://raw.githack.com/stemkoski/AR.js-examples/master/data/delta.patt" id="marker-4"><a-image src="#piece4-img" rotation="-90 0 0" position="0 0.1 0"></a-image></a-marker>
+        <a-marker type="pattern" url="https://raw.githack.com/stemkoski/AR.js-examples/master/data/beta.patt" id="marker-5"><a-image src="#piece5-img" rotation="-90 0 0" position="0 0.1 0"></a-image></a-marker>
+        <a-marker type="pattern" url="https://raw.githack.com/stemkoski/AR.js-examples/master/data/gamma.patt" id="marker-6"><a-image src="#piece6-img" rotation="-90 0 0" position="0 0.1 0"></a-image></a-marker>
+        
+        <a-marker type="barcode" value="6" id="final-marker"></a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <div id="ui-overlay" class="absolute inset-0 p-4 sm:p-6 lg:p-8 flex flex-col justify-between pointer-events-none">
+        <div class="w-full">
+            <h1 class="pt-12 text-3xl sm:text-4xl lg:text-5xl text-center text-shadow-lg">The Medallion of Black Beard</h1>
+            
+            <div class="mt-4 bg-[#c7b392] bg-opacity-70 backdrop-blur-sm p-3 rounded-xl shadow-lg max-w-lg mx-auto pointer-events-auto">
+                <h2 class="text-2xl text-center">Collected Fragments</h2>
+                <div id="medallion-pieces" class="grid grid-cols-3 gap-2 sm:gap-3 mt-2">
+                    </div>
+            </div>
+        </div>
+        
+        <div class="w-full flex flex-col items-center">
+            <div id="message-box" class="text-2xl sm:text-3xl text-center bg-red-800 text-white p-4 rounded-lg shadow-xl transition-all duration-500 transform scale-0 -translate-y-10">
+                Message Here
+            </div>
+             <p class="text-center text-xl sm:text-2xl mt-4 bg-black bg-opacity-50 text-white p-2 rounded">Point yer spyglass at the pirate markers!</p>
+        </div>
+    </div>
+    
+    <div id="final-reveal-modal" class="hidden absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4">
+         <div class="bg-cover bg-center rounded-xl shadow-2xl text-center p-6 sm:p-8 max-w-xl w-full final-reveal-animation" style="background-image: url('https://www.transparenttextures.com/patterns/crissxcross.png'); background-color: #f3e9d2;">
+             
+             <h2 class="text-4xl sm:text-5xl lg:text-6xl text-[#4a2c2a]">The Medallion is Complete!</h2>
+             
+             <img id="complete-medallion-img" src="https://www.teamactivators.com/wp-content/uploads/2025/09/final-image.png" alt="Complete Medallion" class="w-48 sm:w-56 mx-auto my-4 sm:my-6 rounded-full border-8 border-[#4a2c2a]">
+             
+             <p class="text-2xl sm:text-3xl lg:text-4xl text-[#4a2c2a]">The secret code to unlock the chest is:</p>
+             
+             <p id="secret-code" class="text-5xl sm:text-6xl lg:text-7xl font-bold text-red-800 my-3 sm:my-4 tracking-widest">..--- ..--- ....- ....-</p>
+             
+             <button onclick="location.reload()" class="mt-4 px-8 py-3 bg-red-800 text-white text-xl sm:text-2xl rounded-lg shadow-lg hover:bg-red-900 transition-colors pointer-events-auto">Start Anew</button>
+         </div>
+    </div>
+
+    <script>
+        // Make functions globally accessible for the test buttons
+        let testFinalMarker, resetState;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const NUM_PIECES = 6;
+            
+            const pieceImageSrcs = Array.from({ length: NUM_PIECES }, (_, i) => {
+                const imgEl = document.getElementById(`piece${i + 1}-img`);
+                return imgEl ? imgEl.src : `https://placehold.co/100x100/FF0000/FFFFFF?text=MISSING`;
+            });
+
+            const state = {
+                collectedPieces: new Array(NUM_PIECES).fill(false),
+            };
+
+            const ui = {
+                medallionContainer: document.getElementById('medallion-pieces'),
+                messageBox: document.getElementById('message-box'),
+                finalRevealModal: document.getElementById('final-reveal-modal'),
+            };
+
+            // --- LOCAL STORAGE FUNCTIONS ---
+            function saveState() {
+                localStorage.setItem('pirateHuntState', JSON.stringify(state.collectedPieces));
+            }
+
+            function loadState() {
+                const savedState = localStorage.getItem('pirateHuntState');
+                if (savedState) {
+                    state.collectedPieces = JSON.parse(savedState);
+                }
+            }
+
+            // --- UI FUNCTIONS ---
+            function renderMedallionPieces() {
+                ui.medallionContainer.innerHTML = '';
+                for (let i = 0; i < NUM_PIECES; i++) {
+                    const pieceEl = document.createElement('div');
+                    pieceEl.className = 'aspect-square rounded-full flex items-center justify-center transition-all duration-500';
+                    if (state.collectedPieces[i]) {
+                        pieceEl.classList.add('bg-black');
+                        pieceEl.innerHTML = `<img src="${pieceImageSrcs[i]}" class="w-full h-full object-cover rounded-full" alt="Fragment ${i + 1}">`;
+                    } else {
+                        pieceEl.classList.add('bg-black', 'bg-opacity-20');
+                        pieceEl.innerHTML = `<span class="text-4xl text-white opacity-50">?</span>`;
+                    }
+                    ui.medallionContainer.appendChild(pieceEl);
+                }
+            }
+            
+            function showMessage(text, duration = 3000) {
+                ui.messageBox.textContent = text;
+                ui.messageBox.classList.remove('scale-0', '-translate-y-10');
+                ui.messageBox.classList.add('scale-100', 'translate-y-0');
+
+                setTimeout(() => {
+                    ui.messageBox.classList.remove('scale-100', 'translate-y-0');
+                    ui.messageBox.classList.add('scale-0', '-translate-y-10');
+                }, duration);
+            }
+
+            function triggerFinalReveal() {
+                ui.finalRevealModal.classList.remove('hidden');
+            }
+
+            // --- AR LOGIC ---
+            function handleMarkerFound(markerId, pieceIndex) {
+                if (!state.collectedPieces[pieceIndex]) {
+                    state.collectedPieces[pieceIndex] = true;
+                    saveState();
+                    renderMedallionPieces();
+                    showMessage(`Fragment ${pieceIndex + 1} Found!`);
+                }
+            }
+            
+            function handleFinalMarker() {
+                 const allCollected = state.collectedPieces.every(p => p === true);
+                 if(allCollected) {
+                     triggerFinalReveal();
+                 } else {
+                     const remaining = state.collectedPieces.filter(p => !p).length;
+                     showMessage(`Ye still need to find ${remaining} fragments!`);
+                 }
+            }
+            
+            // --- GLOBAL FUNCTIONS FOR BUTTONS ---
+            testFinalMarker = () => { handleFinalMarker(); };
+            
+            resetState = () => {
+                localStorage.removeItem('pirateHuntState');
+                location.reload();
+            };
+
+            // --- INITIALIZATION ---
+            function initialize() {
+                loadState();
+                renderMedallionPieces();
+
+                for (let i = 1; i <= NUM_PIECES; i++) {
+                    const marker = document.querySelector(`#marker-${i}`);
+                    if(marker) {
+                        marker.addEventListener('markerFound', () => handleMarkerFound(i, i - 1));
+                    }
+                }
+                
+                const finalMarker = document.querySelector('#final-marker');
+                if(finalMarker) {
+                    finalMarker.addEventListener('markerFound', handleFinalMarker);
+                }
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>
